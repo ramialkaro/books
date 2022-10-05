@@ -97,19 +97,20 @@ func deleteBook(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	// Init Router
-	r := mux.NewRouter()
+	r := mux.NewRouter().StrictSlash(true)
 
 	// Mock Data TODO implement DB
 	books = append(books, Book{ID: "1", Isbn: "7933", Title: "Book 1", Author: &Author{Firstname: "John", Lastname: "Doe"}})
 	books = append(books, Book{ID: "2", Isbn: "7934", Title: "Book 2", Author: &Author{Firstname: "Steve", Lastname: "Harvey"}})
 	books = append(books, Book{ID: "3", Isbn: "7936", Title: "Book 3", Author: &Author{Firstname: "Micheal", Lastname: "Smith"}})
 
+	// Group routes
+	sub := r.PathPrefix("/api/v1/books").Subrouter()
 	// Route Handlers / Endpoints
-	r.HandleFunc("/api/books", getBooks).Methods("GET")
-	r.HandleFunc("/api/books/{id}", getBook).Methods("GET")
-	r.HandleFunc("/api/books", createBook).Methods("POST")
-	r.HandleFunc("/api/books/{id}", updateBook).Methods("PUT")
-	r.HandleFunc("/api/books/{id}", deleteBook).Methods("DELETE")
-
+	sub.HandleFunc("/", getBooks).Methods("GET")
+	sub.HandleFunc("/{id}", getBook).Methods("GET")
+	sub.HandleFunc("/", createBook).Methods("POST")
+	sub.HandleFunc("/{id}", updateBook).Methods("PUT")
+	sub.HandleFunc("/{id}", deleteBook).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":8000", r))
 }
