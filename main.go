@@ -2,31 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
-
-	"github.com/gorilla/mux"
+  "github.com/ramialkaro/books/models"
 )
 
-// Book struct (Model)
-type Book struct {
-	ID     string  `json:"id"`
-	Isbn   string  `json:"isbn"`
-	Title  string  `json:"title"`
-	Author *Author `json:"author"`
-}
+var books []models.Book
 
-// Author struct
-type Author struct {
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-}
-
-// Init books var as a slice Book struct
-
-var books []Book
 
 func getBooks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -45,14 +30,14 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	json.NewEncoder(w).Encode(&Book{})
+	json.NewEncoder(w).Encode(&models.Book{})
 
 }
 
 // Create a books
 func createBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var book Book
+	var book models.Book
 	_ = json.NewDecoder(r.Body).Decode(&book)
 	book.ID = strconv.Itoa(rand.Intn(1000000)) // Mock ID - not safe
 	books = append(books, book)
@@ -69,7 +54,7 @@ func updateBook(w http.ResponseWriter, r *http.Request) {
 	for index, item := range books {
 		if item.ID == params["id"] {
 			books = append(books[:index], books[index+1:]...)
-			var book Book
+			var book models.Book
 			_ = json.NewDecoder(r.Body).Decode(&book)
 			book.ID = strconv.Itoa(rand.Intn(1000000)) // Mock ID - not safe
 			books = append(books, book)
@@ -100,9 +85,9 @@ func main() {
 	r := mux.NewRouter().StrictSlash(true)
 
 	// Mock Data TODO implement DB
-	books = append(books, Book{ID: "1", Isbn: "7933", Title: "Book 1", Author: &Author{Firstname: "John", Lastname: "Doe"}})
-	books = append(books, Book{ID: "2", Isbn: "7934", Title: "Book 2", Author: &Author{Firstname: "Steve", Lastname: "Harvey"}})
-	books = append(books, Book{ID: "3", Isbn: "7936", Title: "Book 3", Author: &Author{Firstname: "Micheal", Lastname: "Smith"}})
+	books = append(books, models.Book{ID: "1", Isbn: "7933", Title: "Book 1", Author: &models.Author{Firstname: "John", Lastname: "Doe"}})
+	books = append(books, models.Book{ID: "2", Isbn: "7934", Title: "Book 2", Author: &models.Author{Firstname: "Steve", Lastname: "Harvey"}})
+	books = append(books, models.Book{ID: "3", Isbn: "7936", Title: "Book 3", Author: &models.Author{Firstname: "Micheal", Lastname: "Smith"}})
 
 	// Group routes
 	sub := r.PathPrefix("/api/v1/books").Subrouter()
@@ -112,5 +97,6 @@ func main() {
 	sub.HandleFunc("/", createBook).Methods("POST")
 	sub.HandleFunc("/{id}", updateBook).Methods("PUT")
 	sub.HandleFunc("/{id}", deleteBook).Methods("DELETE")
-	log.Fatal(http.ListenAndServe(":8000", r))
+  log.Println("listen on port 8080")
+  log.Fatal(http.ListenAndServe(":8000", r))
 }
